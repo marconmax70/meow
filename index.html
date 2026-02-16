@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Volunteer DSS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2563EB;
+  --green:#22C55E;
+  --orange:#F59E0B;
+  --bg:#F3F4F6;
+  --card:#ffffff;
+  --text:#111827;
+}
+body.dark{
+  --bg:#111827;
+  --card:#1F2937;
+  --text:#E5E7EB;
+}
+*{box-sizing:border-box;font-family:Inter, sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+/* Sidebar */
+.sidebar{width:240px;background:var(--card);padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:2px 0 10px rgba(0,0,0,.05)}
+.logo{font-weight:700;font-size:20px;color:var(--blue);margin-bottom:20px}
+.nav a{display:block;padding:10px;border-radius:10px;text-decoration:none;color:var(--text);margin-bottom:6px}
+.nav a:hover{background:rgba(37,99,235,.1)}
+/* Main */
+.main{flex:1;padding:25px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+button{border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+.primary{background:var(--blue);color:white}
+.green{background:var(--green);color:white}
+.orange{background:var(--orange);color:white}
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+.card h3{margin:0 0 6px}
+.tags{margin:10px 0}
+.tag{display:inline-block;background:rgba(34,197,94,.15);padding:4px 8px;border-radius:8px;margin:3px;font-size:12px}
+.match{font-weight:700;color:var(--green);margin:6px 0}
+/* Filters */
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filters select,.filters input{padding:8px;border-radius:10px;border:1px solid #d1d5db}
+/* Wizard form */
+.wizard{background:var(--card);padding:20px;border-radius:16px;margin-top:30px;max-width:600px}
+.progress{height:8px;background:#d1d5db;border-radius:10px;margin-bottom:15px}
+.progress-bar{height:100%;width:20%;background:var(--blue);border-radius:10px;transition:.3s}
+.hidden{display:none}
+@media(max-width:800px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">VolunteerDSS</div>
+  <div class="nav">
+    <a href="#">🏠 Главная</a>
+    <a href="#recommend">🎯 Рекомендации</a>
+    <a href="#applications">📄 Мои заявки</a>
+    <a href="#calendar">📅 Календарь</a>
+    <a href="#profile">👤 Профиль</a>
+  </div>
+  <button onclick="toggleDark()">🌙 Тёмная тема</button>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2>Добро пожаловать, Алексей 👋</h2>
+    <button class="orange">Подобрать для меня</button>
+  </div>
+
+  <h3>Рекомендованные мероприятия</h3>
+  <div class="filters">
+    <select id="format">
+      <option value="all">Формат</option>
+      <option value="online">Онлайн</option>
+      <option value="offline">Офлайн</option>
+    </select>
+    <input type="text" id="search" placeholder="Поиск по названию" />
+  </div>
+
+  <div class="cards" id="cards">
+    <div class="card" data-type="offline">
+      <h3>Помощь в доме престарелых</h3>
+      <div>📍 Петропавл • 21 марта</div>
+      <div class="tags">
+        <span class="tag">Общение</span>
+        <span class="tag">Медицина</span>
+      </div>
+      <div class="match">Соответствие: 87%</div>
+      <button class="green">Участвовать</button>
+    </div>
+
+    <div class="card" data-type="online">
+      <h3>Онлайн‑репетиторство детям</h3>
+      <div>💻 Онлайн • 18 марта</div>
+      <div class="tags">
+        <span class="tag">Обучение</span>
+        <span class="tag">Английский</span>
+      </div>
+      <div class="match">Соответствие: 92%</div>
+      <button class="green">Участвовать</button>
+    </div>
+  </div>
+
+  <div class="wizard">
+    <h3>Анкета волонтёра</h3>
+    <div class="progress"><div class="progress-bar" id="bar"></div></div>
+
+    <div class="step" id="step1">
+      <input placeholder="Ваш город" /><br/><br/>
+      <input placeholder="Возраст" />
+    </div>
+
+    <div class="step hidden" id="step2">
+      <input placeholder="Навыки (через запятую)" />
+    </div>
+
+    <div class="step hidden" id="step3">
+      <input placeholder="Интересы" />
+    </div>
+
+    <br/>
+    <button class="primary" onclick="nextStep()">Далее</button>
+  </div>
+</div>
+
+<script>
+function toggleDark(){document.body.classList.toggle('dark')}
+
+// Filter
+const search=document.getElementById('search');
+const format=document.getElementById('format');
+search.oninput=format.onchange=function(){
+  document.querySelectorAll('.card').forEach(card=>{
+    let text=card.innerText.toLowerCase();
+    let matchText=text.includes(search.value.toLowerCase());
+    let matchType=format.value==='all'||card.dataset.type===format.value;
+    card.style.display=(matchText&&matchType)?'block':'none';
+  });
+}
+
+// Wizard
+let step=1;
+function nextStep(){
+  document.getElementById('step'+step).classList.add('hidden');
+  step++;
+  if(document.getElementById('step'+step)){
+    document.getElementById('step'+step).classList.remove('hidden');
+    document.getElementById('bar').style.width=(step*33)+'%';
+  }
+}
+</script>
+</body>
+</html>
